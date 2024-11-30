@@ -10,6 +10,7 @@ import Loader from '../components/UI/Loader/Loader';
 import { useFetching } from '../components/hooks/useFetching';
 import { getPagesCount, getPagesArray } from '../utils/pages.js';
 import Pagination from '../components/UI/pagination/Pagination.jsx';
+import { useObserver } from '../components/hooks/useObserver.js';
 
 function Posts() {
   const [posts, setPosts] = useState([]);
@@ -18,18 +19,23 @@ function Posts() {
   const [totalPages, setTotalPages] = useState(0);
   const [limit, setLimit] = useState(10);
   const [page, setPage] = useState(1);
+  const lastElement = useRef();
+
   const [fetchPosts, isPostsLoading, postError] = useFetching(async () => {
     const response = await PostService.getAll(limit, page);
-    setPosts(response.data);
+    setPosts([...posts, ...response.data]);
     const totalCount = response.headers['x-total-count'];
     setTotalPages(getPagesCount(totalCount, limit));
   });
   const sortedAndSearchedPosts = usePosts(posts, filter.sort, filter.query);
 
+  useObserver(lastElement, page < totalPages, isPostsLoading, () => {
+    setPage(page+1);
+  })
 
   useEffect(() => {
-    fetchPosts();
-  }, [page])
+    fetchPosts(limit, page);
+  }, [page, limit])
 
 
   const createPost = (newPost) => {
@@ -61,14 +67,15 @@ function Posts() {
       {postError &&
         <h1>Error{postError}</h1>
       }
-      {isPostsLoading
-        ? <div style={{ display: 'flex', justifyContent: 'center', marginTop: '5vw' }}><Loader /></div>
-        : <PostList remove={removePost} posts={sortedAndSearchedPosts} title="Посты про JS" />
+      {isPostsLoading &&
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '5vw' }}><Loader /></div>
       }
+      <PostList remove={removePost} posts={sortedAndSearchedPosts} title="Посты про JS" />
+      <div ref={lastElement} style={{height: '1vw', background: 'red'}} />
       <Pagination
-      totalPages={totalPages}
-      page={page}
-      changePage={changePage}
+        totalPages={totalPages}
+        page={page}
+        changePage={changePage}
       />
     </div>
   );
