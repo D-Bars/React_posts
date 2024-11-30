@@ -11,6 +11,7 @@ import { useFetching } from '../components/hooks/useFetching';
 import { getPagesCount, getPagesArray } from '../utils/pages.js';
 import Pagination from '../components/UI/pagination/Pagination.jsx';
 import { useObserver } from '../components/hooks/useObserver.js';
+import MySelect from '../components/UI/select/MySelect.jsx';
 
 function Posts() {
   const [posts, setPosts] = useState([]);
@@ -63,6 +64,17 @@ function Posts() {
       <PostFilter
         filter={filter}
         setFilter={setFilter}
+      />
+      <MySelect 
+      value={limit}
+      onChange={value => setLimit(value)}
+      defaultValue="Number of posts loaded"
+      options={[
+        {value: 5, name: '5'},
+        {value: 10, name: '10'},
+        {value: 15, name: '15'},
+        {value: -1, name: 'All posts'}
+      ]}
       />
       {postError &&
         <h1>Error{postError}</h1>
